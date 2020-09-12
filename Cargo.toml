@@ -1,0 +1,9 @@
+[package]
+name = "fov"
+version = "0.1.0"
+authors = ["Zachary <zacharykamerling@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+rand = "*"
+rand_xorshift = "*"
