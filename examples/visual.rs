@@ -4,9 +4,9 @@ use rand::Rng;
 
 pub fn main() {
     const DIAM: usize = 40usize;
-    const RADIUS: usize = DIAM / 2 - 1;
+    const RADIUS: u8 = (DIAM / 2 - 1) as u8;
     let d = DIAM as isize;
-    let fov = FOV::<RADIUS>::new(true);
+    let fov = FOV::<RADIUS>::new();
     let mut state = BitGrid::new(DIAM, DIAM, false);
     let mut vision = BitGrid::new(DIAM, DIAM, false);
     let mut rng = rand::thread_rng();

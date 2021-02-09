@@ -5,16 +5,17 @@ mod bitvec;
 pub use bitvec::BitGrid;
 
 #[derive(Clone)]
-pub struct FOV<const R: usize> {
+pub struct FOV<const R: u8> {
     shading: Vec<BitGrid>,
     range_shading: Vec<BitGrid>,
 }
 
-impl<const R: usize> FOV<R> {
-    pub fn new(permissive: bool) -> FOV<R> {
+impl<const R: u8> FOV<R> {
+    pub fn new() -> FOV<R> {
+        let r = R as usize;
         let ri = R as isize;
-        let mut shading = Vec::with_capacity(R * R);
-        let mut range_shading = Vec::with_capacity(R);
+        let mut shading = Vec::with_capacity(r * r);
+        let mut range_shading = Vec::with_capacity(r);
 
         fn range((x0, y0): (isize, isize), (x1, y1): (isize, isize)) -> isize {
             let dx = x0 - x1;
@@ -25,16 +26,16 @@ impl<const R: usize> FOV<R> {
 
         for y in 0..ri {
             for x in 0..ri {
-                shading.push(BitGrid::new(R, R, false));
+                shading.push(BitGrid::new(r, r, false));
 
                 // Trace from outer edges (eliminates redundant tracing from inner points)
-                if !permissive || x == (ri - 1) || y == (ri - 1) {
+                if x == (ri - 1) || y == (ri - 1) {
                     let line = trace((x, y), (0, 0));
 
                     // For each point on line shade along line to that point
                     for i in 0..line.len() {
                         let (px, py) = (line[i].0 as usize, line[i].1 as usize);
-                        let ix = py * R + px;
+                        let ix = py * r + px;
 
                         for &xy in line.iter().take(i) {
                             shading[ix].set(xy, true);
@@ -45,7 +46,7 @@ impl<const R: usize> FOV<R> {
         }
 
         for i in 1..=ri {
-            let mut range_shade = BitGrid::new(R, R, false);
+            let mut range_shade = BitGrid::new(r, r, false);
             for y in 0..ri {
                 for x in 0..ri {
                     if range((0, 0), (x, y)) >= i * i {
@@ -64,7 +65,7 @@ impl<const R: usize> FOV<R> {
 
     // Given a point and a BitGrid where 'true' values are fov blockers,
     // returns an iterator over visible tiles.
-    pub fn compute(&self, state: &BitGrid, (x, y): (isize, isize), r: usize) -> FOVIter<R> {
+    pub fn compute(&self, state: &BitGrid, (x, y): (isize, isize), r: u8) -> FOVIter {
         if r == 0 {
             panic!("You can't compute a FOV that is 0.")
         }
@@ -73,7 +74,7 @@ impl<const R: usize> FOV<R> {
             panic!("You tried to compute a FOV larger than you have instantiated.")
         }
 
-        let mut ne = self.range_shading[r - 1].clone();
+        let mut ne = self.range_shading[r as usize - 1].clone();
         let mut se = ne.clone();
         let mut sw = ne.clone();
         let mut nw = ne.clone();
@@ -118,7 +119,7 @@ impl<const R: usize> FOV<R> {
     }
 }
 
-pub struct FOVIter<const R: usize> {
+pub struct FOVIter {
     ne: BitGrid,
     se: BitGrid,
     sw: BitGrid,
@@ -132,7 +133,7 @@ pub struct FOVIter<const R: usize> {
     y: isize,
 }
 
-impl<const R: usize> Iterator for FOVIter<R> {
+impl Iterator for FOVIter {
     type Item = (isize, isize);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -141,15 +142,14 @@ impl<const R: usize> Iterator for FOVIter<R> {
                 return None;
             }
             let xy = (self.x, self.y);
-            let blocked = 
-            if self.x >= self.mid_x {
-                if self.y >= self.mid_y {
-                    self.ne.get((self.x - self.mid_x, self.y - self.mid_y))
-                } else {
-                    self.se.get((self.x - self.mid_x, self.mid_y - self.y))
-                }
-            } else {
-                if self.y >= self.mid_y {
+            let blocked = {
+                if self.x >= self.mid_x {
+                    if self.y >= self.mid_y {
+                        self.ne.get((self.x - self.mid_x, self.y - self.mid_y))
+                    } else {
+                        self.se.get((self.x - self.mid_x, self.mid_y - self.y))
+                    }
+                } else if self.y >= self.mid_y {
                     self.nw.get((self.mid_x - self.x, self.y - self.mid_y))
                 } else {
                     self.sw.get((self.mid_x - self.x, self.mid_y - self.y))
