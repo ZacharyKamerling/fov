@@ -1,5 +1,3 @@
-#![feature(min_const_generics)]
-
 mod bitvec;
 
 pub use bitvec::BitGrid;
@@ -10,8 +8,8 @@ pub struct FOV<const R: u8> {
     range_shading: Vec<BitGrid>,
 }
 
-impl<const R: u8> FOV<R> {
-    pub fn new() -> FOV<R> {
+impl<const R: u8> Default for FOV<R> {
+    fn default() -> Self {
         let r = R as usize;
         let ri = R as isize;
         let mut shading = Vec::with_capacity(r * r);
@@ -62,15 +60,17 @@ impl<const R: u8> FOV<R> {
             range_shading,
         }
     }
+}
 
+impl<const R: u8> FOV<R> {
     // Given a point and a BitGrid where 'true' values are fov blockers,
     // returns an iterator over visible tiles.
-    pub fn compute(&self, state: &BitGrid, (x, y): (isize, isize), r: u8) -> FOVIter {
+    pub fn compute_visible(&self, state: &BitGrid, (x, y): (isize, isize), r: u8) -> FOVIter {
         if r == 0 {
             panic!("You can't compute a FOV that is 0.")
         }
 
-        if r > R.into() {
+        if r > R {
             panic!("You tried to compute a FOV larger than you have instantiated.")
         }
 

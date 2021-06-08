@@ -6,7 +6,7 @@ pub fn main() {
     const DIAM: usize = 40usize;
     const RADIUS: u8 = (DIAM / 2 - 1) as u8;
     let d = DIAM as isize;
-    let fov = FOV::<RADIUS>::new();
+    let fov = FOV::<RADIUS>::default();
     let mut state = BitGrid::new(DIAM, DIAM, false);
     let mut vision = BitGrid::new(DIAM, DIAM, false);
     let mut rng = rand::thread_rng();
@@ -21,7 +21,7 @@ pub fn main() {
     }
     state.set(xy, false);
 
-    for (x, y) in fov.compute(&state, xy, RADIUS) {
+    for (x, y) in fov.compute_visible(&state, xy, RADIUS) {
         // Set visible tiles
         vision.set((x, y), true);
     }

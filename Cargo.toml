@@ -5,6 +5,7 @@ authors = ["Zachary <zacharykamerling@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+bencher = "*"
 rand = "*"
 rand_xorshift = "*"
 
@@ -12,3 +13,7 @@ rand_xorshift = "*"
 lto = true
 codegen-units = 1
 opt-level = 3
+
+[[bench]]
+name = "fill"
+harness = false
